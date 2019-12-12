@@ -5,7 +5,7 @@ from scipy import optimize
 import numpy as np
 
 
-QUANTMODULOS = 4
+QUANTMODULOS = 64
 
 
 def gaussiana(x,media,variancia):
@@ -13,28 +13,43 @@ def gaussiana(x,media,variancia):
     return g
 
 
-def plotaHist(tabelao, nome, quantBins=5):
+def plotaHist(tabelao, nome, quantBins=6):
     plt.figure(figsize=(10,8))
+    
 
     print (" ")
 
     print ("###########  " + nome + "  ###########")
 
-    ruido = np.linspace(10, 50, 300)
-# 4 graus de liberdade
+    #matriz de correlaçao é identidade
+    # Encontra o histograma
+    n, bins,_ = plt.hist(tabelao, bins=quantBins, density=1)
+    
+
+    ruido = np.linspace(bins[0], bins[-1], 300)
+    yruido = []
+    for aux in range (0, 300):
+        for aux2 in range (0, quantBins):
+            if ((ruido[aux] >= bins[aux2]) and (ruido[aux] <= bins[aux2+1])):
+                yruido.append(n[aux2])
+
+
+    # 4 graus de liberdade
     # Fita os dados
     (mu, sigma) = sps.norm.fit(tabelao)
     print("media: " + str(mu) + "     sigma: " + str(sigma))
     gausEsp = sps.norm.pdf(ruido, mu, sigma)
 
-#matriz de correlaçao é identidade
-    # Encontra o histograma
-    n, bins,_ = plt.hist(tabelao, bins=quantBins, density=1)
-    
 
     # Fita o histograma
     #(histmu, histsigma) = sps.norm.fit(bins)
-    parametros_otimos,_ = optimize.curve_fit(gaussiana,bins[0:-1],n,[31,2.5])
+    xdata = []
+    for bin in range(0, quantBins):
+        xdata.append((bins[bin] + bins[bin+1])/2)
+
+    #print ("-----------------------------N:          "+str(n)+"     BINS:          "+str(xdata))
+    
+    parametros_otimos,_ = optimize.curve_fit(gaussiana,ruido,yruido,[34,1])
     print("media: " + str(parametros_otimos[0]) + "     sigma: " + str(parametros_otimos[1]))
     histEst = sps.norm.pdf(ruido, parametros_otimos[0], parametros_otimos[1])
 
@@ -44,8 +59,8 @@ def plotaHist(tabelao, nome, quantBins=5):
     plt.xlabel = 'Intervalo do Ruido'
     plt.ylabel = 'Quantidade nos Bins'
     plt.title(r'$\mathrm{Histograma\ do\ Ruido :}\ \ mu=%.3f,\ \sigma=%.3f,\ histmu=%.3f,\ histsigma=%.3f$' %(mu, sigma,parametros_otimos[0],parametros_otimos[1]))
-    #plt.savefig(f'./Figuras/{nome}')
-    plt.savefig(f'/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Figuras/{nome}')
+    plt.savefig(f'./Figuras/{nome}')
+    #plt.savefig(f'/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Figuras/{nome}')
     plt.close()
 
     chiquadrado, confLevel = sps.chisquare(histEst,gausEsp, 2)
@@ -55,15 +70,15 @@ def plotaHist(tabelao, nome, quantBins=5):
 
 
 ## Cada tabela 
-#tabelao_EBA_D5 = pd.read_csv('./Pedestal (Ruido)/EBA_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
-#tabelao_EBA_D6 = pd.read_csv('./Pedestal (Ruido)/EBA_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
-#tabelao_EBC_D5 = pd.read_csv('./Pedestal (Ruido)/EBC_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
-#tabelao_EBC_D6 = pd.read_csv('./Pedestal (Ruido)/EBC_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+tabelao_EBA_D5 = pd.read_csv('./Pedestal (Ruido)/EBA_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+tabelao_EBA_D6 = pd.read_csv('./Pedestal (Ruido)/EBA_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+tabelao_EBC_D5 = pd.read_csv('./Pedestal (Ruido)/EBC_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+tabelao_EBC_D6 = pd.read_csv('./Pedestal (Ruido)/EBC_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
 
-tabelao_EBA_D5 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBA_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
-tabelao_EBA_D6 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBA_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
-tabelao_EBC_D5 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBC_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
-tabelao_EBC_D6 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBC_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+#tabelao_EBA_D5 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBA_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+#tabelao_EBA_D6 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBA_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+#tabelao_EBC_D5 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBC_D5_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+#tabelao_EBC_D6 = pd.read_csv('/home/lucas/Documents/UFRJ/ITM/ITM_Ruido-master/Pedestal (Ruido)/EBC_D6_pedestal_statistics.txt', sep=" ", usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
 
 
 #print (tabelao_EBA_D5.head())
@@ -129,9 +144,10 @@ for modulo in range (0,QUANTMODULOS+1):
 
 
 ## Plotar histograma
-for sample in range (1,8):
-    for modulo in range (0,QUANTMODULOS+1):
-        plotaHist(tabelao_EBA_D5_c0[0]['Sample'+str(sample)],'Hist_EBA_D5_c0_Sample'+str(sample)+'_Modulo'+str(modulo)+'-10bins')
+#for sample in range (1,8):
+sample = 1
+for modulo in range (0,QUANTMODULOS+1):
+    plotaHist(tabelao_EBA_D5_c0[0]['Sample'+str(sample)],'Hist_EBA_D5_c0_Sample'+str(sample)+'_Modulo'+str(modulo)+'-10bins')
         #plotaHist(tabelao_EBA_D5_c1['Sample'+str(sample)],'Hist_EBA_D5_c1_Sample'+str(sample)+'_Modulo0-10bins')
         #plotaHist(tabelao_EBA_D6_c2['Sample'+str(sample)],'Hist_EBA_D6_c2_Sample'+str(sample)+'_Modulo0-10bins')
         #plotaHist(tabelao_EBA_D6_c3['Sample'+str(sample)],'Hist_EBA_D6_c3_Sample'+str(sample)+'_Modulo0-10bins')
@@ -141,8 +157,10 @@ for sample in range (1,8):
         #plotaHist(tabelao_EBC_D6_c2['Sample'+str(sample)],'Hist_EBC_D6_c2_Sample'+str(sample)+'_Modulo0-10bins')
         #plotaHist(tabelao_EBC_D6_c3['Sample'+str(sample)],'Hist_EBC_D6_c3_Sample'+str(sample)+'_Modulo0-10bins')
 
+##############
+"""
+Sample1 eh gaussiano
+outros Samples nao
 
-## Fitting
-
-
-## Chi quadrado
+Modulos sao juntaveis
+"""
